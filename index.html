@@ -156,49 +156,81 @@
         
         if(!text) return;
 
-        // User message
+        // User message UI
         box.innerHTML += `<div class="msg user">${text}</div>`;
         input.value = "";
         
-        // Response Placeholder
+        // AI Response Placeholder (Starting state)
         const loadingId = "load-" + Date.now();
         box.innerHTML += `<div class="msg bot" id="${loadingId}">Responcing<span class="loading-dots"></span></div>`;
+        const botMsgDiv = document.getElementById(loadingId);
         box.scrollTop = box.scrollHeight;
 
         try {
-            const res = await fetch(SPACE_URL, {
+            const response = await fetch(SPACE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text })
             });
 
-            const data = await res.json();
-            let finalReply = "";
-
-            if (Array.isArray(data) && data.length > 0) {
-                finalReply = data[0].generated_text || data[0];
-            } else if (data.generated_text) {
-                finalReply = data.generated_text;
-            } else if (data.error) {
-                // Yahan loading status upgrade ho jayega
-                document.getElementById(loadingId).innerText = "AI Model jaag raha hai (Waking up)... Bas thodi dair aur.";
-                // 10 second baad auto retry ka logic bhi laga sakte hain yahan
+            // Agar model load ho raha ho (503)
+            if (response.status === 503) {
+                botMsgDiv.innerText = "Sirat-ul-Mustaqeem AI jaag raha hai... Bas thodi dair sabar karein.";
                 return;
-            } else {
-                finalReply = "Maafi, kuch technical masla hai.";
             }
 
-            // Cleanup
-            if (finalReply.includes("<|assistant|>")) {
-                finalReply = finalReply.split("<|assistant|>").pop().trim();
-            }
+            // STREAMING LOGIC START
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+            let firstChunk = true;
 
-            document.getElementById(loadingId).innerText = finalReply;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                // Chunk ko decode karna
+                const chunk = decoder.decode(value, { stream: true });
+                
+                // Pehle chunk par animation hatana
+                if (firstChunk) {
+                    botMsgDiv.innerText = ""; 
+                    firstChunk = false;
+                }
+
+                // Hugging Face JSON response ko clean karna
+                try {
+                    // Yahan hum data ko sanitize kar rahe hain
+                    const cleanData = chunk.replace(/data: /g, '').trim();
+                    const parsed = JSON.parse(cleanData);
+                    
+                    // Text extract karna (Model to model depend karta hai)
+                    let newText = "";
+                    if (Array.isArray(parsed)) {
+                        newText = parsed[0].generated_text || "";
+                    } else {
+                        newText = parsed.generated_text || "";
+                    }
+
+                    // Cleaning Prompt tags
+                    if (newText.includes("<|assistant|>")) {
+                        newText = newText.split("<|assistant|>").pop();
+                    }
+                    
+                    fullText = newText.trim();
+                    botMsgDiv.innerText = fullText;
+
+                } catch (e) {
+                    // Agar chunk incomplete JSON ho toh skip karein jab tak complete na ho jaye
+                }
+                
+                box.scrollTop = box.scrollHeight;
+            }
 
         } catch (error) {
-            document.getElementById(loadingId).innerHTML = `<span style="color:#ff5252;">Rabta nahi ho saka. Connection check karein.</span>`;
+            console.error(error);
+            botMsgDiv.innerHTML = `<span style="color:#ff5252;">Rabta nahi ho saka. Connection check karein.</span>`;
         }
-        box.scrollTop = box.scrollHeight;
     }
 </script>
 
