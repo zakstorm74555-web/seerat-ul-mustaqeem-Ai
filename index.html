@@ -1,94 +1,206 @@
 <!DOCTYPE html>
-<html lang="ur">
+<html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Sirat-ul-Mustaqeem AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sirat-ul-Mustaqeem AI | صراطِ مستقیہم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #002b1c; color: #d4af37; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background-color: #004225; padding: 25px; border-radius: 15px; border: 2px solid #d4af37; width: 90%; max-width: 550px; }
-        .ayat { color: #f1e5ac; font-size: 22px; text-align: center; margin: 15px 0; font-weight: bold; }
-        #chat-box { height: 350px; overflow-y: auto; border: 1px solid #d4af37; background: #00331a; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .msg { margin: 10px 0; padding: 10px; border-radius: 8px; line-height: 1.5; }
-        .user { background: #005c33; color: white; text-align: right; margin-left: 20%; }
-        .bot { background: #d4af37; color: #002b1c; font-weight: bold; margin-right: 20%; }
-        .input-area { display: flex; gap: 10px; }
-        input { flex: 1; padding: 12px; border-radius: 5px; border: 1px solid #d4af37; background: #f1e5ac; color: #002b1c; }
-        button { padding: 12px 20px; background: #d4af37; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; color: #002b1c; }
+        :root {
+            --primary-green: #004d40;
+            --secondary-green: #002b1c;
+            --gold: #d4af37;
+            --light-gold: #f1e5ac;
+            --white: #ffffff;
+        }
+
+        body {
+            background: radial-gradient(circle, var(--secondary-green) 0%, #001a11 100%);
+            color: var(--gold);
+            font-family: 'Amiri', serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-card {
+            background: rgba(0, 77, 64, 0.9);
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
+            border-radius: 20px;
+            border: 2px solid var(--gold);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+            margin: 10px;
+        }
+
+        .header {
+            background: var(--secondary-green);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .header h1 { margin: 0; font-size: 28px; color: var(--gold); }
+        .ayat-header { font-size: 18px; color: var(--light-gold); margin-top: 5px; }
+
+        #chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-image: url('https://www.transparenttextures.com/patterns/islamic-art.png');
+        }
+
+        .msg {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 15px;
+            font-size: 18px;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user {
+            align-self: flex-start;
+            background: var(--gold);
+            color: var(--secondary-green);
+            border-bottom-left-radius: 2px;
+            font-weight: bold;
+        }
+
+        .bot {
+            align-self: flex-end;
+            background: var(--secondary-green);
+            color: var(--light-gold);
+            border: 1px solid var(--gold);
+            border-bottom-right-radius: 2px;
+            text-align: right;
+        }
+
+        .loading-dots:after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 40% { color: var(--gold); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .2em 0 0 var(--gold), .4em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .2em 0 0 var(--gold), .4em 0 0 var(--gold); } }
+
+        .input-area {
+            padding: 20px;
+            background: var(--secondary-green);
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            background: #003d33;
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        button {
+            background: var(--gold);
+            color: var(--secondary-green);
+            border: none;
+            padding: 0 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: var(--light-gold); transform: scale(1.05); }
+
     </style>
 </head>
 <body>
-    <h1>صراطِ مستقیہم AI</h1>
-    <div class="ayat">فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ</div>
-    <p>تو تم اپنے پروردگار کی کون کون سی نعمتوں کو جھٹلاؤ گے</p>
-    
-    <div class="container">
-        <div id="chat-box"></div>
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Sawal likhein...">
-            <button onclick="send()">Bismillah</button>
-        </div>
+
+<div class="app-card">
+    <div class="header">
+        <h1>صراطِ مستقیہم AI</h1>
+        <div class="ayat-header">فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ</div>
     </div>
 
-   <script>
-        const SPACE_URL = "https://paradoxstudio9807-muslim-ai.hf.space/ask";
+    <div id="chat-box">
+        <div class="msg bot">Assalamu Alaikum! Main Sirat-ul-Mustaqeem AI hoon. Main Deen-e-Islam ki maloomat mein aapki madad kar sakta hoon. Sawal poochiye?</div>
+    </div>
 
-        async function send() {
-            const input = document.getElementById('userInput');
-            const box = document.getElementById('chat-box');
-            if(!input.value.trim()) return;
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Sawal likhein..." onkeypress="if(event.key==='Enter') send()">
+        <button onclick="send()">Bismillah</button>
+    </div>
+</div>
 
-            const val = input.value;
-            box.innerHTML += `<div class="msg user">${val}</div>`;
-            input.value = "";
-            
-            const loadingId = "load-" + Date.now();
-            box.innerHTML += `<div class="msg bot" id="${loadingId}">Noor-e-Irfan talash kar raha hoon...</div>`;
-            box.scrollTop = box.scrollHeight;
+<script>
+    const SPACE_URL = "https://paradoxstudio9807-muslim-ai.hf.space/ask";
 
-            try {
-                const res = await fetch(SPACE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: val })
-                });
+    async function send() {
+        const input = document.getElementById('userInput');
+        const box = document.getElementById('chat-box');
+        const text = input.value.trim();
+        
+        if(!text) return;
 
-                const data = await res.json();
-                console.log("AI Response:", data); // Check karne ke liye
+        // User message
+        box.innerHTML += `<div class="msg user">${text}</div>`;
+        input.value = "";
+        
+        // Response Placeholder
+        const loadingId = "load-" + Date.now();
+        box.innerHTML += `<div class="msg bot" id="${loadingId}">Responcing<span class="loading-dots"></span></div>`;
+        box.scrollTop = box.scrollHeight;
 
-                let finalReply = "";
+        try {
+            const res = await fetch(SPACE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
 
-                // Case 1: Agar data list hai [ { generated_text: "..." } ]
-                if (Array.isArray(data) && data.length > 0) {
-                    finalReply = data[0].generated_text || data[0];
-                } 
-                // Case 2: Agar data seedha object hai { generated_text: "..." }
-                else if (data.generated_text) {
-                    finalReply = data.generated_text;
-                }
-                // Case 3: Agar data sirf string hai
-                else if (typeof data === 'string') {
-                    finalReply = data;
-                }
-                // Case 4: Agar error message hai
-                else if (data.error) {
-                    finalReply = "AI Model abhi load ho raha hai (Loading Model...). 1 minute baad dobara koshish karein.";
-                }
-                else {
-                    finalReply = JSON.stringify(data); // Sab kuch dikha do agar kuch samajh na aaye
-                }
+            const data = await res.json();
+            let finalReply = "";
 
-                // Cleaning the text (Prompt ko hata kar sirf jawab dikhana)
-                if (finalReply.includes("<|assistant|>")) {
-                    finalReply = finalReply.split("<|assistant|>").pop().trim();
-                }
-
-                document.getElementById(loadingId).innerText = finalReply;
-
-            } catch (error) {
-                document.getElementById(loadingId).innerHTML = `<span style="color:red;">Server se rabta nahi ho saka. Bismillah par dobara click karein.</span>`;
+            if (Array.isArray(data) && data.length > 0) {
+                finalReply = data[0].generated_text || data[0];
+            } else if (data.generated_text) {
+                finalReply = data.generated_text;
+            } else if (data.error) {
+                // Yahan loading status upgrade ho jayega
+                document.getElementById(loadingId).innerText = "AI Model jaag raha hai (Waking up)... Bas thodi dair aur.";
+                // 10 second baad auto retry ka logic bhi laga sakte hain yahan
+                return;
+            } else {
+                finalReply = "Maafi, kuch technical masla hai.";
             }
-            box.scrollTop = box.scrollHeight;
+
+            // Cleanup
+            if (finalReply.includes("<|assistant|>")) {
+                finalReply = finalReply.split("<|assistant|>").pop().trim();
+            }
+
+            document.getElementById(loadingId).innerText = finalReply;
+
+        } catch (error) {
+            document.getElementById(loadingId).innerHTML = `<span style="color:#ff5252;">Rabta nahi ho saka. Connection check karein.</span>`;
         }
-    </script>
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
+
 </body>
 </html>
