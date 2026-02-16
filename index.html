@@ -28,8 +28,7 @@
         </div>
     </div>
 
-    <script>
-        // Yahan apni Hugging Face Space ka "Direct URL" dalein
+   <script>
         const SPACE_URL = "https://paradoxstudio9807-muslim-ai.hf.space/ask";
 
         async function send() {
@@ -40,19 +39,39 @@
             const val = input.value;
             box.innerHTML += `<div class="msg user">${val}</div>`;
             input.value = "";
+            
+            // Loading indicator
+            const loadingId = "load-" + Date.now();
+            box.innerHTML += `<div class="msg bot" id="${loadingId}">Soch raha hoon...</div>`;
             box.scrollTop = box.scrollHeight;
 
             try {
                 const res = await fetch(SPACE_URL, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message: val})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: val })
                 });
+
+                if (!res.ok) throw new Error("Server down hai");
+
                 const data = await res.json();
-                const reply = data[0].generated_text.split("<|assistant|>\n")[1] || "Maafi chahta hoon, dobara koshish karein.";
-                box.innerHTML += `<div class="msg bot">${reply}</div>`;
+                console.log("Full Data:", data); // Check karne ke liye console mein dekhein
+
+                let reply = "";
+                // Hugging Face response handle karne ka behtar tareeqa
+                if (Array.isArray(data) && data[0].generated_text) {
+                    reply = data[0].generated_text.split("<|assistant|>\n")[1] || data[0].generated_text;
+                } else if (data.generated_text) {
+                    reply = data.generated_text.split("<|assistant|>\n")[1] || data.generated_text;
+                } else {
+                    reply = "Maafi, sahi jawab nahi mil saka.";
+                }
+
+                document.getElementById(loadingId).innerText = reply;
+
             } catch (error) {
-                box.innerHTML += `<div class="msg bot" style="color:red;">Connection Error! Check if Space is running.</div>`;
+                console.error("Error details:", error);
+                document.getElementById(loadingId).innerHTML = `<span style="color:red;">Connection Error! Space check karein ya F12 dabakar error dekhein.</span>`;
             }
             box.scrollTop = box.scrollHeight;
         }
